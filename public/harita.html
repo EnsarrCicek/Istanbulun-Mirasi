@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İstanbul Haritası</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow-x: hidden; /* Yatay kaydırmayı gizle */
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh; /* Tam ekran yüksekliği */
+            border-radius: 0; /* Köşe yuvarlamasını kaldır */
+            position: relative; /* Geri dön butonunu konumlandırmak için */
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            z-index: 1; /* Haritanın üstünde görünmesini sağlar */
+        }
+
+        .back-button:hover {
+            background-color: #555;
+        }
+
+        /* Popup içindeki resim için stil */
+        .popup-image {
+            width: 200px; /* Resmin genişliği */
+            height: auto; /* Yükseklik orantılı */
+        }
+    </style>
+</head>
+<body>
+    <!-- Geri dön butonu -->
+    <a href="index.html" class="back-button">Ana Sayfaya Dön</a>
+    <!-- Harita Div'i -->
+    <div id="map"></div>
+
+    <script>
+        // MapLibre haritasını oluşturma
+        const map = new maplibregl.Map({
+            container: "map",
+            style: "https://basemap.ibb.gov.tr/static/rehber_altlik.json?id=111",
+            center: [28.97953, 41.015137],
+            zoom: 10
+        });
+
+        // GeoJSON verisi - Fotoğraf URL'leri eklenmiş
+        var geojson = {
+            "type": "FeatureCollection",
+            "features": [
+               
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "TOPKAPI SARAYI",
+                        "description": "",
+                        "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Topkapi_Palace_Seen_From_Harem.JPG/405px-Topkapi_Palace_Seen_From_Harem.JPG" // Topkapı Sarayı fotoğrafı URL'si
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [ 28.9840807441617,
+                        41.0127463696837] // Topkapı Sarayı'nın koordinatları
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "AYASOFYA CAMİ",
+                        "description": "",
+                      
+                        "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Hagia_Sophia_Mars_2013.jpg/405px-Hagia_Sophia_Mars_2013.jpg" // 
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [ 28.979974384201796,
+                        41.00851242899532] 
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "SULTANAHMET CAMİ",
+                        "description": "",
+                        "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Exterior_of_Sultan_Ahmed_I_Mosque_in_Istanbul%2C_Turkey_002.jpg/405px-Exterior_of_Sultan_Ahmed_I_Mosque_in_Istanbul%2C_Turkey_002.jpg" // 
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [   28.976797692997195,
+                        41.005411991009936] 
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "KAPALI ÇARŞI",
+                        "description": "",
+                        "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Istanbul_asv2021-11_img41_Grand_Bazaar.jpg/405px-Istanbul_asv2021-11_img41_Grand_Bazaar.jpg" // Fatih fotoğrafı URL'si
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [28.96845689950223, 41.01067128522709] // Fatih'in koordinatları
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "GALATA KULESİ",
+                        "description": "",
+                        "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Istanbul_asv2020-02_img48_Galata_Tower.jpg/405px-Istanbul_asv2020-02_img48_Galata_Tower.jpg" // Fatih fotoğrafı URL'si
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [28.974208695005615,
+                        41.02563609382972] // Fatih'in koordinatları
+                    }
+                }
+                
+            ]
+        };
+
+        map.on('load', function () {
+            // GeoJSON kaynağının eklenmesi
+            map.addSource('data', {
+                'type': 'geojson',
+                'data': geojson
+            });
+
+            // Nokta katmanı eklenmesi
+            map.addLayer({
+                'id': 'data-points',
+                'type': 'circle',
+                'source': 'data',
+                'paint': {
+                    'circle-radius': 8, // Çemberin boyutu
+                    'circle-color': '#ff0000', // Çemberin rengi
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff' // Çemberin çevresinin rengi
+                }
+            });
+
+            // Popup işlevselliği
+            map.on('click', 'data-points', function (e) {
+                var coordinates = e.features[0].geometry.coordinates.slice();
+                var title = e.features[0].properties.title;
+                var description = e.features[0].properties.description;
+                var photo = e.features[0].properties.photo;
+
+                // Popup oluşturulması
+                new maplibregl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML('<h3>' + title + '</h3><p>' + description + '</p><img src="' + photo + '" class="popup-image"/>')
+                    .addTo(map);
+            });
+
+            // İmleç değişikliği
+            map.on('mouseenter', 'data-points', function () {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'data-points', function () {
+                map.getCanvas().style.cursor = '';
+            });
+        });
+    </script>
+</body>
+</html>
